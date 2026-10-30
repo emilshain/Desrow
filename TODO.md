@@ -89,12 +89,13 @@ Last updated: 30 October 2026 · Release 0.1.0
 - [x] BUILD, TODO, CLAUD, AGENT, SECURITY and CHANGELOG
 - [x] Typecheck and production build gates
 - [x] Manual end-to-end verification: CSV → artwork/font → 1400 × 1800 batch → exports
+- [x] Documentation consistency pass and GitHub milestone pushes
 
 ---
 
 ## In progress
 
-- [*] Final milestone review, documentation consistency pass and GitHub push
+Nothing is currently in progress; the 0.1.0 milestone is complete.
 
 ---
 
