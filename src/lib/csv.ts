@@ -144,3 +144,59 @@ export function getCell(row: Record<string, string>, column: string): string {
   if (!column) return "";
   return row[column] ?? "";
 }
+
+const TITLE_HINTS = ["title", "role", "position", "job"];
+const ID_HINTS = ["id", "identifier", "badge", "number", "ref"];
+
+function hasToken(values: Record<string, string>, token: string): boolean {
+  return Object.keys(values).some(
+    (candidate) => candidate.trim().toLowerCase() === token,
+  );
+}
+
+function findColumn(values: Record<string, string>, hints: string[]): string {
+  const columns = Object.keys(values);
+  return (
+    columns.find((column) => hints.includes(normalized(column))) ??
+    columns.find((column) => {
+      const words = normalized(column).split(" ");
+      return hints.some((hint) => words.includes(hint));
+    }) ??
+    ""
+  );
+}
+
+/**
+ * Adds the canonical tokens the starter template uses on top of a row's real
+ * columns: `name` follows the mapped name column, `title` and `id` follow
+ * matching headers, and `photo`/`portrait`/`image` follow the mapped image
+ * column. Explicit columns always win; aliases only fill missing tokens.
+ */
+export function tokenValues(
+  values: Record<string, string>,
+  mapping: ColumnMapping,
+): Record<string, string> {
+  const tokens = { ...values };
+
+  const name = getCell(values, mapping.nameColumn).trim();
+  if (name && !hasToken(tokens, "name")) tokens.name = name;
+
+  const image = getCell(values, mapping.imageColumn).trim();
+  if (image) {
+    for (const alias of ["photo", "portrait", "image"]) {
+      if (!hasToken(tokens, alias)) tokens[alias] = image;
+    }
+  }
+
+  if (!hasToken(tokens, "title")) {
+    const column = findColumn(values, TITLE_HINTS);
+    if (column) tokens.title = values[column] ?? "";
+  }
+
+  if (!hasToken(tokens, "id")) {
+    const column = findColumn(values, ID_HINTS);
+    if (column) tokens.id = values[column] ?? "";
+  }
+
+  return tokens;
+}
