@@ -55,7 +55,7 @@ export interface RenderAssetInput {
 
 export async function renderAsset(input: RenderAssetInput): Promise<HTMLCanvasElement> {
   const { template, settings, values, image, crop, scale } = input;
-  await ensureTemplateFonts(template.texts);
+  await ensureTemplateFonts(template);
 
   const width = Math.max(1, Math.round(template.width * scale));
   const height = Math.max(1, Math.round(template.height * scale));

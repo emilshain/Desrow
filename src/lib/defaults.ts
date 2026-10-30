@@ -1,4 +1,3 @@
-import { FONTS } from "./fonts";
 import type {
   CurvePoint,
   ProcessingSettings,
@@ -101,7 +100,7 @@ function textLayer(
     width: partial.width ?? 0.84,
     font: partial.font ?? "serif",
     size: partial.size ?? 64,
-    weight: partial.weight ?? FONTS[partial.font ?? "serif"].weights[0],
+    weight: partial.weight ?? 400,
     letterSpacing: partial.letterSpacing ?? 0,
     lineHeight: partial.lineHeight ?? 1.05,
     align: partial.align ?? "left",
@@ -127,6 +126,7 @@ export function createTemplate(input?: {
     height,
     backgroundColor: "#0c0c0d",
     backgroundImage: null,
+    fonts: [],
     photo: {
       x: 0,
       y: 0,

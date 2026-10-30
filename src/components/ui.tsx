@@ -2,10 +2,8 @@
 
 import {
   type ButtonHTMLAttributes,
-  type InputHTMLAttributes,
+  type ComponentPropsWithRef,
   type ReactNode,
-  type SelectHTMLAttributes,
-  type TextareaHTMLAttributes,
   useEffect,
   useState,
 } from "react";
@@ -92,14 +90,14 @@ export function Field({
 export function TextInput({
   className,
   ...props
-}: InputHTMLAttributes<HTMLInputElement>) {
+}: ComponentPropsWithRef<"input">) {
   return <input className={cx("input", className)} {...props} />;
 }
 
 export function TextArea({
   className,
   ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: ComponentPropsWithRef<"textarea">) {
   return <textarea className={cx("textarea", className)} {...props} />;
 }
 
@@ -107,7 +105,7 @@ export function Select({
   className,
   children,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement>) {
+}: ComponentPropsWithRef<"select">) {
   return (
     <select className={cx("select", className)} {...props}>
       {children}

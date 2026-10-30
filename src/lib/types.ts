@@ -21,7 +21,14 @@ export interface Dataset {
 }
 
 export type FontKey = "sans" | "serif" | "mono";
+export type FontSelection = FontKey | `local:${string}` | `custom:${string}`;
 export type TextAlign = "left" | "center" | "right";
+
+export interface TemplateFont {
+  id: string;
+  label: string;
+  dataUrl: string;
+}
 
 export interface PhotoLayer {
   /** Normalized 0–1 coordinates relative to the template canvas. */
@@ -44,7 +51,7 @@ export interface TextLayer {
   x: number;
   y: number;
   width: number;
-  font: FontKey;
+  font: FontSelection;
   size: number;
   weight: number;
   letterSpacing: number;
@@ -61,8 +68,10 @@ export interface Template {
   width: number;
   height: number;
   backgroundColor: string;
-  /** Data URL of the master artwork. */
+  /** Data URL of the master artwork. Its native size defines the canvas. */
   backgroundImage: string | null;
+  /** Embedded font files uploaded for this template. */
+  fonts?: TemplateFont[];
   photo: PhotoLayer;
   texts: TextLayer[];
   createdAt: number;
