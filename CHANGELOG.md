@@ -109,6 +109,8 @@ The first complete local-first studio: spreadsheet ingestion, artwork-driven tem
 
 ### Fixed
 
+- Google Sheets links without a `gid` no longer force `gid=0`. This caused HTTP 400 rejections for public sheets whose first tab has a different ID; the proxy now lets Google choose the first visible tab and appends `gid` only when the link specifies one.
+- Sheet import errors now distinguish refused access (sharing settings), a rejected tab, a missing sheet and rate limiting instead of always blaming public sharing.
 - Mapped spreadsheet columns now resolve correctly in the starter template, batch output and filename patterns. Previously `{{name}}`/`{{title}}` could resolve empty when the source used headers such as `Full Name` and `Role`.
 - Filename patterns using `{{index}}` now include the 1-based record number.
 - Font initialisation tolerates templates with missing optional font/layer arrays.

@@ -2,9 +2,12 @@ import { assertSafeRemoteUrl, UnsafeUrlError } from "./security";
 
 export class RemoteFetchError extends Error {
   status: number;
-  constructor(message: string, status = 502) {
+  /** The HTTP status returned by the remote host, when one was received. */
+  upstreamStatus?: number;
+  constructor(message: string, status = 502, upstreamStatus?: number) {
     super(message);
     this.status = status;
+    this.upstreamStatus = upstreamStatus;
   }
 }
 
@@ -80,8 +83,9 @@ export async function guardedFetch(
       throw new RemoteFetchError(
         response.status === 404
           ? "The file was not found at that link."
-          : "The remote server rejected the request. The file may not be shared publicly.",
+          : "The remote server rejected the request.",
         502,
+        response.status,
       );
     }
 

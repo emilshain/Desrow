@@ -141,6 +141,7 @@ Optional security checks:
 | “Face detection could not start” / detector unavailable | Missing model, WASM, or WebGL context | Run `npm run sync:assets`; confirm `public/models/blaze_face_short_range.tflite` and `public/mediapipe/wasm/vision_wasm_internal.wasm`; try CPU fallback by disabling hardware acceleration or restarting the browser |
 | Drive link fails | File not public, wrong link form, or quota page | Share “Anyone with the link”; use a `/file/d/...` or `open?id=...` link; verify the image opens in a private window |
 | Google Sheet returns HTML | Sheet is private or the wrong tab/gid | Set “Anyone with the link can view”; include the correct `gid`; use the published CSV form if needed |
+| “Google rejected that sheet tab” | Stale or invalid `gid` in the copied URL | Open the sheet, select the tab, copy a fresh link; or remove the `gid` fragment to import the first visible tab |
 | Canvas is blank after artwork upload | Very large artwork exceeded memory, or the image is still decoding | Keep artwork ≤ 8,000 px per side; reload and retry |
 | Custom font does not apply | File over 2 MB, unsupported format, corrupt/DRM font | Use WOFF2/WOFF/TTF/OTF under 2 MB; test in a fresh template |
 | Device font looks different on another machine | Device fonts are machine-specific | Upload and embed the font instead |

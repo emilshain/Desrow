@@ -52,13 +52,21 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof RemoteFetchError) {
+      const upstream = error.upstreamStatus;
+      const message =
+        error.status === 415
+          ? "Google returned a page instead of CSV. Set the sheet to “Anyone with the link can view” and try again."
+          : upstream === 401 || upstream === 403
+            ? "Google refused access to this sheet. Set Share to “Anyone with the link → Viewer” and try again."
+            : upstream === 400
+              ? "Google rejected that sheet tab. Open the sheet, copy a fresh link, and try again."
+              : upstream === 404
+                ? "The sheet was not found. Check the link and its sharing settings."
+                : upstream === 429
+                  ? "Google is limiting requests right now. Wait a moment and try again."
+                  : error.message;
       return NextResponse.json(
-        {
-          error:
-            error.status === 415
-              ? "Google returned a page instead of CSV. Set the sheet to “Anyone with the link can view” and try again."
-              : error.message,
-        },
+        { error: message },
         { status: error.status === 400 ? 400 : 502 },
       );
     }

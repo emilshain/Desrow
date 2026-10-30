@@ -55,6 +55,8 @@ npm run start
 
 1. **Source** — drop a CSV or paste a public Google Sheet link. Map the name column and the portrait-link column. Every other column becomes a `{{token}}`.
 2. **Templates** — upload master artwork (the canvas adopts its pixel size) or choose a fallback size. Place the photo frame and text layers directly on the canvas or with exact inspector values.
+
+Google Sheets links without a `gid` import the first visible tab; a `gid` in the link targets that tab. The sheet must be shared so anyone with the link can view it.
 3. **Render** — choose the dataset and template, set the crop, tone, grain and output controls, inspect a record, optionally save a per-record crop override, then run the batch.
 4. **Export** — download individual frames or the whole ZIP. Batches remain in **Exports** until deleted.
 

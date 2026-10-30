@@ -1,6 +1,7 @@
 export interface SheetSource {
   id: string;
-  gid: string;
+  /** Sheet tab ID, or null when the link does not specify one. */
+  gid: string | null;
   published: boolean;
   csvUrl: string;
 }
@@ -36,10 +37,14 @@ export function resolveSheetSource(raw: string, gidOverride?: string): SheetSour
   const id = published?.[1] ?? standard?.[1];
   if (!id) return null;
 
-  const gid = gidOverride ?? parseSheetGid(raw) ?? "0";
+  const requestedGid = gidOverride ?? parseSheetGid(raw);
+  const gid = requestedGid && /^\d+$/.test(requestedGid) ? requestedGid : null;
+  // Omitting gid lets Google use the first visible tab. Forcing gid=0 breaks
+  // sheets whose first tab has a different (or reused) tab ID.
+  const gidParam = gid ? `&gid=${gid}` : "";
   const csvUrl = published
-    ? `https://docs.google.com/spreadsheets/d/e/${id}/pub?output=csv&gid=${gid}`
-    : `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+    ? `https://docs.google.com/spreadsheets/d/e/${id}/pub?output=csv${gidParam}`
+    : `https://docs.google.com/spreadsheets/d/${id}/export?format=csv${gidParam}`;
 
   return {
     id,

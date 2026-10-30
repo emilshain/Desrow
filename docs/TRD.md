@@ -80,7 +80,7 @@ flowchart LR
 
 ### Request flow: Google Sheet
 
-1. `resolveSheetSource` accepts only `docs.google.com/spreadsheets/d/...` or the published `/d/e/...` form, extracts the sheet ID and `gid`, and builds a CSV export URL.
+1. `resolveSheetSource` accepts only `docs.google.com/spreadsheets/d/...` or the published `/d/e/...` form, extracts the sheet ID and optional `gid`, and builds a CSV export URL. A `gid` is appended only when the link actually specifies one; otherwise Google exports the first visible tab (forcing `gid=0` breaks sheets whose first tab has a different ID).
 2. `/api/sheets` calls `guardedFetch` with a Google-host predicate and a 15 MB cap.
 3. The client parses the CSV with Papa Parse, then discards the raw response.
 
