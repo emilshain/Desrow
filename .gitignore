@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# local data & env
+.env
+.env*.local
+*.log
+
+# generated face-detection assets (copied from node_modules)
+/public/mediapipe/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# typescript
+*.tsbuildinfo
+
+# freebuff workspace
+.freebuff/
