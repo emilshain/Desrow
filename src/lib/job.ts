@@ -1,7 +1,7 @@
-import { getCell } from "./csv";
+import { getCell, tokenValues } from "./csv";
 import { computeCrop } from "./crop";
 import { proxiedImageUrl } from "./drive";
-import { detectFace } from "./face";
+import { detectFaceCached } from "./face";
 import { canvasToBlob, loadImageElement, thumbnailDataUrl } from "./image";
 import { renderAsset } from "./render";
 import { buildFilename, fileNameWithoutExtension, safeFilename } from "./tokens";
@@ -34,22 +34,6 @@ export interface RunRenderJobOptions {
   onItem?: (item: RenderItem, index: number) => void;
 }
 
-const faceCache = new Map<string, FaceBox | null>();
-
-async function resolveFaceBox(
-  sourceUrl: string,
-  image: HTMLImageElement,
-): Promise<FaceBox | null> {
-  if (faceCache.has(sourceUrl)) return faceCache.get(sourceUrl) ?? null;
-
-  const box = await detectFace(image);
-  faceCache.set(sourceUrl, box);
-  if (faceCache.size > 300) {
-    const oldest = faceCache.keys().next().value;
-    if (oldest) faceCache.delete(oldest);
-  }
-  return box;
-}
 
 function uniqueFilename(candidate: string, used: Set<string>): string {
   if (!used.has(candidate.toLowerCase())) {
@@ -102,6 +86,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
 
   const processRow = async (index: number): Promise<void> => {
     const row = dataset.rows[index];
+    const tokens = tokenValues(row.values, dataset.mapping);
     const label =
       getCell(row.values, dataset.mapping.nameColumn).trim() || `Record ${index + 1}`;
     active.add(label);
@@ -139,7 +124,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
         filename: uniqueFilename(
           buildFilename({
             pattern: settings.output.filenamePattern,
-            values: row.values,
+            values: tokens,
             index: index + 1,
             format: settings.output.format,
             fallbackLabel: safeFilename(label),
@@ -167,7 +152,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
 
       if (settings.crop.detectFaces && !detectionDisabled) {
         try {
-          faceBox = await resolveFaceBox(rawLink, image);
+          faceBox = await detectFaceCached(rawLink, image);
           if (!faceBox) {
             warning = "No face was detected — the manual fallback crop was used.";
           }
@@ -193,7 +178,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
       const canvas = await renderAsset({
         template,
         settings,
-        values: row.values,
+        values: tokens,
         image,
         crop,
         scale: settings.output.scale,
@@ -212,7 +197,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
         filename: uniqueFilename(
           buildFilename({
             pattern: settings.output.filenamePattern,
-            values: row.values,
+            values: tokens,
             index: index + 1,
             format: settings.output.format,
             fallbackLabel: safeFilename(label),
@@ -237,7 +222,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
         filename: uniqueFilename(
           buildFilename({
             pattern: settings.output.filenamePattern,
-            values: row.values,
+            values: tokens,
             index: index + 1,
             format: settings.output.format,
             fallbackLabel: safeFilename(label),
@@ -262,6 +247,9 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
     Array.from({ length: Math.min(concurrency, Math.max(1, total)) }, () => worker()),
   );
 
-  return items.filter((item): item is RenderItem => Boolean(item));
+  const order = new Map(dataset.rows.map((row, index) => [row.id, index]));
+  return items
+    .filter((item): item is RenderItem => Boolean(item))
+    .sort((a, b) => (order.get(a.rowId) ?? 0) - (order.get(b.rowId) ?? 0));
 }
 

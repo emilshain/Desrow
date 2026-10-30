@@ -81,3 +81,25 @@ export async function warmUpFaceDetector(): Promise<boolean> {
     return false;
   }
 }
+
+const detectionCache = new Map<string, FaceBox | null>();
+
+/** Shared by the preview and the batch so each portrait is detected once. */
+export async function detectFaceCached(
+  key: string,
+  image: HTMLImageElement,
+): Promise<FaceBox | null> {
+  if (detectionCache.has(key)) return detectionCache.get(key) ?? null;
+
+  const box = await detectFace(image);
+  detectionCache.set(key, box);
+  if (detectionCache.size > 300) {
+    const oldest = detectionCache.keys().next().value;
+    if (oldest) detectionCache.delete(oldest);
+  }
+  return box;
+}
+
+export function clearFaceCache(): void {
+  detectionCache.clear();
+}

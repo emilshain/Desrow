@@ -51,7 +51,10 @@ export function buildFilename(input: {
   format: "png" | "jpeg";
   fallbackLabel: string;
 }): string {
-  const resolved = resolveTokens(input.pattern, input.values);
+  const resolved = resolveTokens(input.pattern, {
+    ...input.values,
+    index: String(input.index),
+  });
   const base = safeFilename(resolved || `${input.fallbackLabel}-${input.index}`);
   return `${base || `record-${input.index}`}.${extensionFor(input.format)}`;
 }

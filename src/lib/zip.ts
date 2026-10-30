@@ -2,23 +2,26 @@ import JSZip from "jszip";
 import type { Dataset, RenderItem, RunSummary } from "./types";
 
 function csvCell(value: string): string {
-  const text = value ?? "";
+  const raw = value ?? "";
+  // Neutralise spreadsheet formulas before escaping the cell.
+  const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
 function buildManifest(
-  dataset: Dataset,
+  dataset: Dataset | null,
   items: RenderItem[],
 ): string {
+  const columns = dataset?.columns ?? [];
   const header = [
     "filename",
     "label",
     "status",
     "error",
     "portrait_link",
-    ...dataset.columns,
+    ...columns,
   ];
-  const rowsByRowId = new Map(dataset.rows.map((row) => [row.id, row.values]));
+  const rowsByRowId = new Map(dataset?.rows.map((row) => [row.id, row.values]) ?? []);
 
   const lines = items.map((item) => {
     const values = rowsByRowId.get(item.rowId) ?? {};
@@ -28,7 +31,7 @@ function buildManifest(
       item.status,
       item.error ?? "",
       item.sourceUrl,
-      ...dataset.columns.map((column) => values[column] ?? ""),
+      ...columns.map((column) => values[column] ?? ""),
     ]
       .map(csvCell)
       .join(",");
@@ -39,7 +42,7 @@ function buildManifest(
 
 export async function buildExportZip(
   run: RunSummary,
-  dataset: Dataset,
+  dataset: Dataset | null,
   items: RenderItem[],
 ): Promise<Blob> {
   const zip = new JSZip();
@@ -59,7 +62,7 @@ export async function buildExportZip(
         run: {
           id: run.id,
           name: run.name,
-          dataset: dataset.name,
+          dataset: dataset?.name ?? run.datasetName,
           template: run.templateName,
           total: run.total,
           rendered: rendered.length,
