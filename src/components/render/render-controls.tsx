@@ -176,9 +176,21 @@ export function ProcessingPanel({
               <div className="mt-2">
                 <Segmented
                   label="Photo placement"
-                  value={settings.crop.fitToFrame ? "fit" : "crop"}
-                  onChange={(mode) => patchCrop({ fitToFrame: mode === "fit" })}
+                  value={
+                    settings.crop.fitToFrame
+                      ? "fit"
+                      : settings.crop.autoFit
+                        ? "auto"
+                        : "crop"
+                  }
+                  onChange={(mode) =>
+                    patchCrop({
+                      fitToFrame: mode === "fit",
+                      autoFit: mode === "auto",
+                    })
+                  }
                   options={[
+                    { value: "auto", label: "Auto" },
                     { value: "crop", label: "Face crop" },
                     { value: "fit", label: "Fit in frame" },
                   ]}
@@ -186,8 +198,10 @@ export function ProcessingPanel({
               </div>
               <p className="mt-2 text-[10.5px] leading-relaxed text-muted-2">
                 {settings.crop.fitToFrame
-                  ? "The whole portrait is scaled to sit inside the frame. Horizontal alignment is always centred; nothing is cropped."
-                  : "The frame is filled from a face-relative crop. Face height and placement stay fully manual."}
+                  ? "Batch default: every portrait is scaled inside the frame and centred horizontally. Override a single record in the frame preview."
+                  : settings.crop.autoFit
+                    ? "The system fits a record only when its face-relative crop would be clipped by the source edges. Everything else uses the crop controls below."
+                    : "Batch default: the frame is filled from a face-relative crop. Face one record differently in the frame preview when needed."}
               </p>
             </div>
 
@@ -204,9 +218,10 @@ export function ProcessingPanel({
                   onChange={(faceY) => patchCrop({ faceY })}
                 />
                 <Notice tone="info">
-                  Fit is useful when a source is too narrow for a face-relative crop or the
-                  detected face is too tight to fill the frame cleanly. The full portrait is
-                  preserved and centred horizontally.
+                  Fit applies to every record as the batch default. Use the frame preview to
+                  turn <strong className="font-medium text-paper">Fit this record</strong> off
+                  for a single portrait, or leave the batch on auto or face crop and switch it
+                  on for just the record that needs it.
                 </Notice>
               </>
             ) : (
@@ -250,8 +265,9 @@ export function ProcessingPanel({
                   onChange={(faceY) => patchCrop({ faceY })}
                 />
                 <Notice tone="info">
-                  Global values apply to every record. The frame preview lets you drag an
-                  individual portrait and save a per-record override.
+                  {settings.crop.autoFit
+                    ? "Auto decides per record and leaves the other records on this face-relative crop. The frame preview shows which decision was taken and lets you force Fit this record on or off."
+                    : "Global values apply to every record. In the frame preview you can drag a portrait, save a per-record override, or turn on Fit this record for one portrait only."}
                 </Notice>
               </>
             )}

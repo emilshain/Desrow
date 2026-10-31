@@ -124,15 +124,17 @@ Priorities: **P0** required for a usable release, **P1** valuable, **P2** later.
 - Detect the largest face using MediaPipe BlazeFace inside the browser.
 - Use GPU with a CPU fallback; serialise detection calls and cache results by source URL.
 - Compute the crop from the face box, not the full image, so head size stays consistent.
-- Global controls: photo placement mode, detection on/off, face height as a percentage of the frame, horizontal face placement, vertical face placement.
-- **Fit in frame** mode scales the whole portrait inside the frame without cropping. It is intended for narrow sources or faces detected too tightly to fill the frame. Horizontal alignment is always centred; vertical placement stays manual.
-- In fit mode the face height and horizontal placement values are not applied, and detection is skipped for the batch.
+- Global controls: photo placement mode (Auto, Face crop or Fit in frame), detection on/off, face height as a percentage of the frame, horizontal face placement, vertical face placement.
+- **Auto** is the placement default. For each record, the system requests the face-relative crop and compares it with the source dimensions. If that crop would need more source than exists — a narrow image, or a detected face too large for the requested framing — Auto fits the whole portrait instead. Records whose face crop is achievable stay face-cropped and keep manual placement.
+- **Fit in frame** forces the whole portrait inside the frame without cropping for every record. Horizontal alignment is always centred; vertical placement stays manual.
+- Fit is a batch default, and each record can override it independently. Auto decisions can be forced on or off for one portrait, and the reverse batch/record combination also works.
+- In fit mode the face height and horizontal placement values are not applied, and detection is skipped for that record. Auto still detects the face because the decision depends on the face box.
 - Manual fallback crop when detection is disabled, unavailable or finds no face.
-- Per-record overrides for face height and X/Y, settable with sliders or by dragging/scrolling the frame preview. In fit mode only vertical placement is adjustable.
-- Show detection status and confidence per record.
+- Per-record overrides for fit, face height and X/Y, settable in the frame preview. In fit mode only vertical placement is adjustable.
+- Show detection status, automatic-fit state and confidence per record.
 - Never send a portrait to a third-party inference service.
 
-**Acceptance:** three different Unsplash portraits render face-framed at the same relative size; turning detection off still produces a usable manual crop; a per-record override affects only that record; fit mode shows the entire portrait, centred horizontally, with no cropping; leaving fit off respects the face placement controls.
+**Acceptance:** three different Unsplash portraits render face-framed at the same relative size; turning detection off still produces a usable manual crop; a per-record override affects only that record; Auto fits only the record whose crop is clipped by the source and leaves the others face-cropped; forced fit mode shows the entire portrait, centred horizontally, with no cropping; enabling fit for one record leaves every other record face-cropped; leaving fit off respects the face placement controls.
 
 ### 6.5 Monochrome grade — P0
 

@@ -124,7 +124,8 @@ The compositor executes in this order for every record:
 validate link
   → fetch through /api/image
   → decode image
-  → detect face (cached; optional, skipped in fit mode)
+  → detect face (cached; optional, skipped when fit is forced)
+  → resolve placement: Auto, forced fit, or face crop
   → compute crop window from face + frame aspect + manual controls,
     or fit the whole portrait inside the frame
   → draw the portrait into an offscreen canvas
@@ -207,9 +208,15 @@ sy = box.centerY * imageHeight - (faceY / 100) * cropHeight
 
 The source rect is clamped to the image. `faceScale` is 8–100 (percentage of frame height occupied by the face), `faceX`/`faceY` are 0–100. Larger `faceScale` means a tighter crop. The fallback box is centred at 50% / 43% with 26% × 32% normalized size.
 
-When `fitToFrame` is enabled, the crop maths is bypassed. `computeFitPlacement` scales the whole portrait with `min(frameWidth / imageWidth, frameHeight / imageHeight)`, places it at `(frameWidth − width) / 2` horizontally and distributes the remaining vertical space by `faceY`. The image is never cropped, horizontal alignment is always centred, and face detection is skipped for the batch.
+`resolveCrop` resolves the final placement for one record:
 
-Per-record overrides supply only the changed values; `effectiveCropSettings` clamps them and merges with global settings.
+- An explicit `override.fitToFrame` wins.
+- Batch **Fit in frame** (`fitToFrame`) forces fit; batch **Face crop** (`autoFit` off and `fitToFrame` off) forces crop.
+- Batch **Auto** (`autoFit` on) fits only when `planCrop` reports `constrained`: the requested crop width or height exceeds the source image. That is the narrow-source or oversized-face case. Otherwise the computed crop is kept.
+
+When fit is selected, the crop maths is bypassed. `computeFitPlacement` scales the whole portrait with `min(frameWidth / imageWidth, frameHeight / imageHeight)`, places it at `(frameWidth − width) / 2` horizontally and distributes the remaining vertical space by `faceY`. The image is never cropped, horizontal alignment is always centred, and face detection is skipped when fit is forced.
+
+Per-record overrides supply only the changed values; `effectiveCropSettings` clamps them and merges with global settings. This includes `fitToFrame`, so one record can fit while the batch remains face-cropped, or the reverse. The batch engine passes the resolved fit flag into `renderAsset` rather than reading the global setting.
 
 ### 6.6 Tone
 

@@ -228,11 +228,11 @@ Every layer can be moved on canvas. The inspector mirrors the same values exactl
 - Deleting a layer or template asks for confirmation.
 - Deleting a batch is irreversible and says so.
 - Resetting processing parameters clears stored settings and restores documented defaults.
-- Overrides can be reset per record without touching global settings.
+- Overrides can be reset per record without touching global settings, including switching a single portrait between fit and face crop.
 
 ### Manual control
 
-No automatic “best” crop replaces the user's settings. Detection informs the crop, but face height/placement, grade, grain and typography remain explicit. If detection fails, the app falls back and tells the user rather than failing the batch.
+No automatic “best” crop replaces the user's settings. The single automatic decision is placement: Auto may choose fit when a face-relative crop would exceed the source, because no valid crop exists for that framing. The preview names that decision and offers a per-record override; face height/placement, grade, grain and typography remain explicit. If detection fails, the app falls back and tells the user rather than failing the batch.
 
 ### Performance feel
 

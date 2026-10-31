@@ -6,8 +6,9 @@ All notable changes to Desrow are recorded here. The format follows [Keep a Chan
 
 ### Added
 
-- Photo placement mode **Fit in frame**: the whole portrait is scaled inside the photo frame without cropping, always centred horizontally. Intended for narrow sources or faces detected too tightly for a face-relative crop.
-- Per-record vertical placement still applies in fit mode; face detection is skipped because it has no effect.
+- Photo placement modes **Auto**, **Face crop** and **Fit in frame**. Auto is the default and fits a record only when its requested face-relative crop would be clipped by the source edges — the narrow image or oversized face case. Fit-in-frame scales the whole portrait inside the frame without cropping, always centred horizontally.
+- Per-record **Fit this record** override in the frame preview. Auto decisions can be forced on or off for one portrait, and a batch can stay on face crop while only the problematic record uses fit.
+- Per-record vertical placement still applies in fit mode. Face detection is skipped when fit is forced; Auto still detects the face because the decision depends on it.
 - **Max lines** per text layer (0 = unlimited). Lines beyond the limit are hidden in the template preview and rendered assets.
 
 ### Changed

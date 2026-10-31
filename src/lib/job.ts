@@ -1,5 +1,5 @@
 import { getCell, tokenValues } from "./csv";
-import { computeCrop, effectiveCropSettings, fullImageCrop } from "./crop";
+import { forcedFitToFrame, resolveCrop } from "./crop";
 import { proxiedImageUrl } from "./drive";
 import { detectFaceCached } from "./face";
 import { canvasToBlob, loadImageElement, thumbnailDataUrl } from "./image";
@@ -70,7 +70,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
   let succeeded = 0;
   let failed = 0;
   let skipped = 0;
-  let detectionDisabled = !settings.crop.detectFaces || settings.crop.fitToFrame;
+  let detectionDisabled = !settings.crop.detectFaces;
   let detectionErrorReported = false;
 
   const report = () => {
@@ -147,10 +147,11 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
 
     try {
       const image = await loadImageElement(proxied);
+      const forcedFit = forcedFitToFrame(settings.crop, overrides[row.id]);
       let faceBox: FaceBox | null = null;
       let warning: string | undefined;
 
-      if (settings.crop.detectFaces && !detectionDisabled) {
+      if (settings.crop.detectFaces && !detectionDisabled && forcedFit !== true) {
         try {
           faceBox = await detectFaceCached(rawLink, image);
           if (!faceBox) {
@@ -165,26 +166,30 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
         }
       }
 
-      const cropSettings = effectiveCropSettings(settings.crop, overrides[row.id]);
-      const crop = cropSettings.fitToFrame
-        ? fullImageCrop(image.naturalWidth, image.naturalHeight)
-        : computeCrop({
-            imageWidth: image.naturalWidth,
-            imageHeight: image.naturalHeight,
-            frameWidth: template.photo.width * template.width,
-            frameHeight: template.photo.height * template.height,
-            box: faceBox,
-            settings: settings.crop,
-            override: overrides[row.id],
-          });
+      const resolved = resolveCrop({
+        imageWidth: image.naturalWidth,
+        imageHeight: image.naturalHeight,
+        frameWidth: template.photo.width * template.width,
+        frameHeight: template.photo.height * template.height,
+        box: faceBox,
+        settings: settings.crop,
+        override: overrides[row.id],
+      });
+
+      if (resolved.auto) {
+        const autoWarning =
+          "Portrait fitted automatically — the face crop would have exceeded the source edges.";
+        warning = warning ? `${warning} ${autoWarning}` : autoWarning;
+      }
 
       const canvas = await renderAsset({
         template,
         settings,
         values: tokens,
         image,
-        crop,
-        faceY: cropSettings.faceY,
+        crop: resolved.crop,
+        fitToFrame: resolved.fitToFrame,
+        faceY: resolved.settings.faceY,
         scale: settings.output.scale,
       });
 

@@ -9,6 +9,7 @@ export function effectiveCropSettings(
 ): CropSettings {
   return {
     ...settings,
+    fitToFrame: override?.fitToFrame ?? settings.fitToFrame,
     faceScale: clamp(override?.faceScale ?? settings.faceScale, 8, 100),
     faceX: clamp(override?.faceX ?? settings.faceX, 0, 100),
     faceY: clamp(override?.faceY ?? settings.faceY, 0, 100),
@@ -25,12 +26,18 @@ export interface CropInput {
   override?: CropOverride;
 }
 
+interface CropPlan {
+  crop: CropRect;
+  /** The requested face scale needs more source than the image contains. */
+  constrained: boolean;
+}
+
 /**
  * The crop is derived from the face box, not the raw image, so subjects keep a
  * consistent head size across records. Manual controls move the face within
  * the frame rather than moving an opaque crop rectangle.
  */
-export function computeCrop(input: CropInput): CropRect {
+function planCrop(input: CropInput): CropPlan {
   const { imageWidth, imageHeight, frameWidth, frameHeight } = input;
   const settings = effectiveCropSettings(input.settings, input.override);
 
@@ -47,6 +54,7 @@ export function computeCrop(input: CropInput): CropRect {
 
   let cropHeight = faceHeight / (settings.faceScale / 100);
   let cropWidth = cropHeight * frameAspect;
+  const constrained = cropWidth > imageWidth || cropHeight > imageHeight;
 
   const fit = Math.min(1, imageWidth / cropWidth, imageHeight / cropHeight);
   cropWidth *= fit;
@@ -56,10 +64,71 @@ export function computeCrop(input: CropInput): CropRect {
   const desiredY = box.y * imageHeight - (settings.faceY / 100) * cropHeight;
 
   return {
-    sx: clamp(desiredX, 0, Math.max(0, imageWidth - cropWidth)),
-    sy: clamp(desiredY, 0, Math.max(0, imageHeight - cropHeight)),
-    sw: Math.max(1, cropWidth),
-    sh: Math.max(1, cropHeight),
+    crop: {
+      sx: clamp(desiredX, 0, Math.max(0, imageWidth - cropWidth)),
+      sy: clamp(desiredY, 0, Math.max(0, imageHeight - cropHeight)),
+      sw: Math.max(1, cropWidth),
+      sh: Math.max(1, cropHeight),
+    },
+    constrained,
+  };
+}
+
+export function computeCrop(input: CropInput): CropRect {
+  return planCrop(input).crop;
+}
+
+/**
+ * Explicit fit flag from a record override or the batch mode. Null means the
+ * automatic rule is allowed to decide.
+ */
+export function forcedFitToFrame(
+  settings: CropSettings,
+  override?: CropOverride,
+): boolean | null {
+  if (typeof override?.fitToFrame === "boolean") return override.fitToFrame;
+  if (settings.fitToFrame) return true;
+  if (settings.autoFit) return null;
+  return false;
+}
+
+export interface ResolvedCrop {
+  settings: CropSettings;
+  crop: CropRect;
+  fitToFrame: boolean;
+  /** True when the system chose fit because the crop exceeded the source. */
+  auto: boolean;
+  constrained: boolean;
+}
+
+/**
+ * Resolves forced placement and the automatic fit rule for one record.
+ * Auto fits when the requested face-relative crop would need more source than
+ * the image contains, which is the narrow-image / oversized-face case.
+ */
+export function resolveCrop(input: CropInput): ResolvedCrop {
+  const settings = effectiveCropSettings(input.settings, input.override);
+  const forced = forcedFitToFrame(input.settings, input.override);
+
+  if (forced === true) {
+    return {
+      settings,
+      crop: fullImageCrop(input.imageWidth, input.imageHeight),
+      fitToFrame: true,
+      auto: false,
+      constrained: false,
+    };
+  }
+
+  const plan = planCrop(input);
+  const auto = forced === null && settings.autoFit && plan.constrained;
+
+  return {
+    settings,
+    crop: auto ? fullImageCrop(input.imageWidth, input.imageHeight) : plan.crop,
+    fitToFrame: auto,
+    auto,
+    constrained: plan.constrained,
   };
 }
 

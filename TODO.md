@@ -64,6 +64,8 @@ Last updated: 30 October 2026 · Release 0.1.0
 - [x] Serialised detector queue and 300-entry URL cache
 - [x] Face-relative crop with face height and X/Y placement
 - [x] Fit-in-frame placement for narrow sources, always centred horizontally
+- [x] Automatic per-record fit when the face crop would exceed the source
+- [x] Per-record fit override so one portrait can fit while the batch crops
 - [x] Manual fallback crop when detection is off/unavailable/empty
 - [x] Per-record crop overrides from sliders and preview drag/scroll
 - [x] Channel mix for monochrome conversion

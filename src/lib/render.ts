@@ -52,6 +52,8 @@ export interface RenderAssetInput {
   image: HTMLImageElement;
   crop: CropRect;
   scale: number;
+  /** Effective placement for this record, including a per-record override. */
+  fitToFrame?: boolean;
   /** Effective vertical placement, including a per-record crop override. */
   faceY?: number;
 }
@@ -91,7 +93,7 @@ export async function renderAsset(input: RenderAssetInput): Promise<HTMLCanvasEl
       settings.tone.brightness,
     );
 
-    if (settings.crop.fitToFrame) {
+    if (input.fitToFrame ?? settings.crop.fitToFrame) {
       const placement = computeFitPlacement(
         image.naturalWidth,
         image.naturalHeight,

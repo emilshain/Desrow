@@ -51,6 +51,7 @@ export const DEFAULT_PROCESSING: ProcessingSettings = {
   crop: {
     detectFaces: true,
     fitToFrame: false,
+    autoFit: true,
     faceScale: 38,
     faceX: 50,
     faceY: 42,

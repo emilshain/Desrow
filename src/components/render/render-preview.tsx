@@ -7,13 +7,14 @@ import {
   Button,
   Slider,
   Spinner,
+  Toggle,
   cx,
 } from "@/components/ui";
 import { getCell, tokenValues } from "@/lib/csv";
 import {
-  computeCrop,
   effectiveCropSettings,
-  fullImageCrop,
+  forcedFitToFrame,
+  resolveCrop,
 } from "@/lib/crop";
 import { proxiedImageUrl } from "@/lib/drive";
 import { detectFaceCached } from "@/lib/face";
@@ -79,8 +80,12 @@ export function RenderPreview({
     [dataset],
   );
 
-  const fit = settings.crop.fitToFrame;
   const effective = effectiveCropSettings(settings.crop, override);
+  const forcedFit = forcedFitToFrame(settings.crop, override);
+  const [resolvedFit, setResolvedFit] = useState(false);
+  const [autoFit, setAutoFit] = useState(false);
+  const fit = forcedFit ?? resolvedFit;
+  const fitIsAutomatic = fit && forcedFit === null && autoFit;
   const hasOverride = Boolean(override && Object.keys(override).length);
   const name = getCell(row.values, dataset.mapping.nameColumn).trim() || `Record ${index + 1}`;
   const sourceUrl = getCell(row.values, dataset.mapping.imageColumn).trim();
@@ -89,6 +94,8 @@ export function RenderPreview({
     let cancelled = false;
     setPreviewState("loading");
     setError(null);
+    setResolvedFit(forcedFit === true);
+    setAutoFit(false);
 
     const proxied = proxiedImageUrl(sourceUrl);
     if (!proxied) {
@@ -106,7 +113,7 @@ export function RenderPreview({
           let status: DetectionStatus = settings.crop.detectFaces ? "pending" : "disabled";
           let score: number | null = null;
 
-          if (fit) {
+          if (forcedFit === true) {
             status = "disabled";
           } else if (settings.crop.detectFaces) {
             try {
@@ -122,25 +129,26 @@ export function RenderPreview({
           setDetection(status);
           setConfidence(score);
 
-          const crop = fit
-            ? fullImageCrop(image.naturalWidth, image.naturalHeight)
-            : computeCrop({
-                imageWidth: image.naturalWidth,
-                imageHeight: image.naturalHeight,
-                frameWidth: template.photo.width * template.width,
-                frameHeight: template.photo.height * template.height,
-                box,
-                settings: settings.crop,
-                override,
-              });
+          const resolved = resolveCrop({
+            imageWidth: image.naturalWidth,
+            imageHeight: image.naturalHeight,
+            frameWidth: template.photo.width * template.width,
+            frameHeight: template.photo.height * template.height,
+            box,
+            settings: settings.crop,
+            override,
+          });
+          setResolvedFit(resolved.fitToFrame);
+          setAutoFit(resolved.auto);
 
           const rendered = await renderAsset({
             template,
             settings,
             values: tokenValues(row.values, dataset.mapping),
             image,
-            crop,
-            faceY: effective.faceY,
+            crop: resolved.crop,
+            fitToFrame: resolved.fitToFrame,
+            faceY: resolved.settings.faceY,
             scale: Math.min(1, 1000 / template.width, 760 / template.height),
           });
           if (cancelled) return;
@@ -226,7 +234,10 @@ export function RenderPreview({
   };
 
   const detectionInfo = fit
-    ? { label: "Fit in frame · centred", tone: "accent" as const }
+    ? {
+        label: fitIsAutomatic ? "Fit in frame · auto" : "Fit in frame · centred",
+        tone: "accent" as const,
+      }
     : detectionCopy[detection];
 
   return (
@@ -395,6 +406,22 @@ export function RenderPreview({
               >
                 Reset
               </button>
+            </div>
+            <div className="mt-3">
+              <div className="rounded-[9px] border border-line bg-black/20 px-3 py-2.5">
+                <Toggle
+                  label="Fit this record"
+                  hint={
+                    fitIsAutomatic
+                      ? "The system fitted this record because the face crop would be clipped. Turn this off to force a face crop for this record only."
+                      : fit
+                        ? "This portrait is contained in the frame and centred horizontally. Other records keep the batch placement."
+                        : "Override the batch placement for this record only. The whole portrait is contained and centred horizontally."
+                  }
+                  checked={fit}
+                  onChange={(fitToFrame) => onOverrideChange({ fitToFrame })}
+                />
+              </div>
             </div>
             <div className="mt-3 space-y-4">
               {fit ? null : (

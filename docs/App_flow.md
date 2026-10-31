@@ -158,7 +158,7 @@ Four tabs:
 
 | Tab | Controls |
 | --- | --- |
-| Crop | Photo placement mode (face crop / fit in frame), face detection toggle, face height in frame, horizontal placement, vertical placement |
+| Crop | Photo placement mode (auto / face crop / fit in frame), face detection toggle, face height in frame, horizontal placement, vertical placement |
 | Tone | Curve editor (add/drag/remove points), presets, contrast, brightness, red/green/blue channel mix, luminance reset |
 | Grain | Amount, size, seed, shuffle |
 | Output | Scale 1×/1.5×/2×, PNG/JPEG, JPEG quality, filename pattern with token chips, parallel renders |
@@ -168,11 +168,13 @@ Every control writes to the settings object; the whole object persists to localS
 ### 5.4 Frame preview
 
 - Shows the selected record rendered by the real compositor at a bounded preview scale.
-- Status line: detection state, confidence and source URL; error/fallback copy when relevant.
+- Status line: detection state, confidence, automatic-fit state and source URL; error/fallback copy when relevant.
 - Previous/next record buttons and a labelled record selector.
 - Drag the portrait to adjust crop position; scroll to change face height.
+- The override panel includes **Fit this record**, so one portrait can use fit placement while the rest of the batch stays face-cropped. The toggle reflects an automatic fit decision and can force it on or off.
 - In fit mode the portrait is contained in the frame and locked to horizontal centre; dragging adjusts vertical placement only and scrolling is disabled.
-- Those interactions create a per-record override. Override sliders show/reset the same values. **Reset** clears the override.
+- Auto mode runs the same face crop maths and switches to fit only when the requested crop would exceed the source dimensions.
+- Those interactions create a per-record override. Override sliders show/reset the same values. **Reset** clears the override and returns the record to the batch placement.
 - Record metadata lists every column.
 
 Preview failures are isolated to the preview; they do not stop a batch.

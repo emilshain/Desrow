@@ -105,10 +105,12 @@ export interface GrainSettings {
 export interface CropSettings {
   detectFaces: boolean;
   /**
-   * Scale the whole portrait down to sit inside the photo frame instead of
-   * face-cropping it. Used for narrow sources whose face box is too tight.
+   * Batch default: force fit for every record. A record override can change
+   * this per record. Ignored when `autoFit` decides per record.
    */
   fitToFrame: boolean;
+  /** Let the system fit a record when its face crop exceeds the source. */
+  autoFit: boolean;
   /** Desired face height as a percentage of the photo frame height. */
   faceScale: number;
   /** Horizontal face position inside the frame, 0–100. */
@@ -133,6 +135,8 @@ export interface ProcessingSettings {
 }
 
 export interface CropOverride {
+  /** Explicit fit/crop for this record; overrides the automatic decision. */
+  fitToFrame?: boolean;
   faceScale?: number;
   faceX?: number;
   faceY?: number;

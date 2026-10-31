@@ -212,7 +212,8 @@ Storage note: full-resolution blobs dominate quota. A 1400 × 1800 PNG can be 1.
 interface ProcessingSettings {
   crop: {
     detectFaces: boolean;
-    fitToFrame: boolean;  // true: contain the whole portrait, horizontally centred
+    fitToFrame: boolean;  // force fit for every record, horizontally centred
+    autoFit: boolean;     // fit per record only when the face crop exceeds the source
     faceScale: number;   // 8–100
     faceX: number;       // 0–100
     faceY: number;       // 0–100
@@ -237,6 +238,8 @@ interface ProcessingSettings {
   };
 }
 ```
+
+`CropOverride` is session state, not an IndexedDB record. It is keyed by row ID and carries optional `fitToFrame`, `faceScale`, `faceX` and `faceY` values; `effectiveCropSettings` merges it over the batch settings and `resolveCrop` performs the automatic fit decision. Run summaries store only the batch settings, so a per-record override or an automatic per-record fit decision is not replayable from `desrow-settings.json`.
 
 ## 5. localStorage keys
 
