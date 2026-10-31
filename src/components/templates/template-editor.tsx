@@ -208,6 +208,7 @@ export function TemplateEditor({ initial }: { initial: Template }) {
       weight: 500,
       letterSpacing: 0,
       lineHeight: 1.1,
+      maxLines: 0,
       align: "left",
       color: "#f1ede4",
       uppercase: false,

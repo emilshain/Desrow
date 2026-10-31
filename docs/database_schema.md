@@ -147,6 +147,7 @@ Indexes: `id` (PK), `updatedAt`.
 | `weight` | `number` | 100–900 |
 | `letterSpacing` | `number` | px at template resolution |
 | `lineHeight` | `number` | Multiplier |
+| `maxLines` | `number` | 0 = unlimited; extra wrapped lines are hidden |
 | `align` | `"left" \| "center" \| "right"` | Anchor inside the box |
 | `color` | `string` | Hex |
 | `uppercase` | `boolean` | Applied at render time |
@@ -211,6 +212,7 @@ Storage note: full-resolution blobs dominate quota. A 1400 × 1800 PNG can be 1.
 interface ProcessingSettings {
   crop: {
     detectFaces: boolean;
+    fitToFrame: boolean;  // true: contain the whole portrait, horizontally centred
     faceScale: number;   // 8–100
     faceX: number;       // 0–100
     faceY: number;       // 0–100

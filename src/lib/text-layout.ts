@@ -82,7 +82,9 @@ export function layoutText(
 
   const widthPx = Math.max(8, layer.width * templateWidth * scale);
   const paragraphs = text.split(/\r?\n/);
-  const lines = paragraphs.flatMap((paragraph) => wrapParagraph(ctx, paragraph, widthPx));
+  const wrapped = paragraphs.flatMap((paragraph) => wrapParagraph(ctx, paragraph, widthPx));
+  const maxLines = Math.max(0, Math.round(layer.maxLines ?? 0));
+  const lines = maxLines > 0 ? wrapped.slice(0, maxLines) : wrapped;
   const lineHeightPx = layer.size * layer.lineHeight * scale;
   ctx.restore();
 

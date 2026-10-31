@@ -812,6 +812,15 @@ export function TemplateInspector({
                   }
                 />
               </div>
+              <Slider
+                label="Max lines"
+                value={textLayer.maxLines ?? 0}
+                min={0}
+                max={12}
+                step={1}
+                hint="0 leaves the field unlimited. Lines past the limit are hidden, so long values cannot overflow the layout."
+                onChange={(maxLines) => onTextChange(textLayer.id, { maxLines })}
+              />
               <div className="flex items-center justify-between gap-3">
                 <span className="field-label">Alignment</span>
                 <Segmented

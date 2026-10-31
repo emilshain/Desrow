@@ -111,10 +111,11 @@ Priorities: **P0** required for a usable release, **P1** valuable, **P2** later.
 - Register embedded fonts with both the DOM and canvas renderer.
 - Use installed device fonts by family name, with common suggestions and an optional Chromium `queryLocalFonts()` scan.
 - Warn that device fonts may fall back on another machine.
-- Per text layer: typeface, weight, exact pixel size, tracking, line height, alignment, opacity, colour, uppercase, content and token insertion.
+- Per text layer: typeface, weight, exact pixel size, tracking, line height, maximum lines, alignment, opacity, colour, uppercase, content and token insertion.
 - Allow exact numeric size through the value box (6–600 px, same range as the slider).
 - Wrap text to the layer's box width, including character-level breaks for long unbroken words.
 - Render hard line breaks.
+- Maximum lines (0 = unlimited) hides any wrapped or hard-broken lines past the limit, so long values cannot spill into other layout elements.
 
 **Acceptance:** an uploaded TTF becomes selectable as “Uploaded”, is embedded in the saved template, and renders in preview and batch output. A device font can be applied by name and persists in the workspace.
 
@@ -123,13 +124,15 @@ Priorities: **P0** required for a usable release, **P1** valuable, **P2** later.
 - Detect the largest face using MediaPipe BlazeFace inside the browser.
 - Use GPU with a CPU fallback; serialise detection calls and cache results by source URL.
 - Compute the crop from the face box, not the full image, so head size stays consistent.
-- Global controls: detection on/off, face height as a percentage of the frame, horizontal face placement, vertical face placement.
+- Global controls: photo placement mode, detection on/off, face height as a percentage of the frame, horizontal face placement, vertical face placement.
+- **Fit in frame** mode scales the whole portrait inside the frame without cropping. It is intended for narrow sources or faces detected too tightly to fill the frame. Horizontal alignment is always centred; vertical placement stays manual.
+- In fit mode the face height and horizontal placement values are not applied, and detection is skipped for the batch.
 - Manual fallback crop when detection is disabled, unavailable or finds no face.
-- Per-record overrides for face height and X/Y, settable with sliders or by dragging/scrolling the frame preview.
+- Per-record overrides for face height and X/Y, settable with sliders or by dragging/scrolling the frame preview. In fit mode only vertical placement is adjustable.
 - Show detection status and confidence per record.
 - Never send a portrait to a third-party inference service.
 
-**Acceptance:** three different Unsplash portraits render face-framed at the same relative size; turning detection off still produces a usable manual crop; a per-record override affects only that record.
+**Acceptance:** three different Unsplash portraits render face-framed at the same relative size; turning detection off still produces a usable manual crop; a per-record override affects only that record; fit mode shows the entire portrait, centred horizontally, with no cropping; leaving fit off respects the face placement controls.
 
 ### 6.5 Monochrome grade — P0
 
@@ -146,10 +149,10 @@ Priorities: **P0** required for a usable release, **P1** valuable, **P2** later.
 - Grain amount from 0–70%.
 - Cell size from 0.4–4 px at output resolution.
 - Reproducible seed with a shuffle action.
-- Apply after grading, before compositing into the template; artwork and type stay clean.
+- Apply to the portrait before the tone curve and before compositing into the template; the curve shapes the grain, while artwork and type stay clean.
 - Zero amount disables the grain pass.
 
-**Acceptance:** the same seed yields the same pattern across exports; changing size changes the grain structure; grain is confined to the photo frame.
+**Acceptance:** the same seed yields the same pattern across exports; changing size changes the grain structure; grain is confined to the portrait area and reacts to curve changes.
 
 ### 6.7 Output and batch — P0
 

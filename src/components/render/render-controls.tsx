@@ -171,48 +171,90 @@ export function ProcessingPanel({
       <div className="mt-5 space-y-5">
         {tab === "crop" ? (
           <>
-            <div className="rounded-[9px] border border-line bg-black/20 px-3.5 py-3">
-              <Toggle
-                label="Face detection"
-                hint="BlazeFace runs in this browser. Failed or empty detections fall back to the manual crop."
-                checked={settings.crop.detectFaces}
-                onChange={(detectFaces) => patchCrop({ detectFaces })}
-              />
+            <div>
+              <span className="field-label">Photo placement</span>
+              <div className="mt-2">
+                <Segmented
+                  label="Photo placement"
+                  value={settings.crop.fitToFrame ? "fit" : "crop"}
+                  onChange={(mode) => patchCrop({ fitToFrame: mode === "fit" })}
+                  options={[
+                    { value: "crop", label: "Face crop" },
+                    { value: "fit", label: "Fit in frame" },
+                  ]}
+                />
+              </div>
+              <p className="mt-2 text-[10.5px] leading-relaxed text-muted-2">
+                {settings.crop.fitToFrame
+                  ? "The whole portrait is scaled to sit inside the frame. Horizontal alignment is always centred; nothing is cropped."
+                  : "The frame is filled from a face-relative crop. Face height and placement stay fully manual."}
+              </p>
             </div>
-            <Slider
-              label="Face height in frame"
-              value={settings.crop.faceScale}
-              min={8}
-              max={100}
-              step={1}
-              unit="%"
-              hint="A larger value crops tighter around the subject."
-              onChange={(faceScale) => patchCrop({ faceScale })}
-            />
-            <Slider
-              label="Horizontal placement"
-              value={settings.crop.faceX}
-              min={0}
-              max={100}
-              step={1}
-              unit="%"
-              hint="Where the face centre lands across the photo frame."
-              onChange={(faceX) => patchCrop({ faceX })}
-            />
-            <Slider
-              label="Vertical placement"
-              value={settings.crop.faceY}
-              min={0}
-              max={100}
-              step={1}
-              unit="%"
-              hint="42% leaves natural headroom. 50% centres the face."
-              onChange={(faceY) => patchCrop({ faceY })}
-            />
-            <Notice tone="info">
-              Global values apply to every record. The frame preview lets you drag an
-              individual portrait and save a per-record override.
-            </Notice>
+
+            {settings.crop.fitToFrame ? (
+              <>
+                <Slider
+                  label="Vertical placement"
+                  value={settings.crop.faceY}
+                  min={0}
+                  max={100}
+                  step={1}
+                  unit="%"
+                  hint="Places the fitted portrait between the top and bottom of the frame. Horizontal alignment stays centred."
+                  onChange={(faceY) => patchCrop({ faceY })}
+                />
+                <Notice tone="info">
+                  Fit is useful when a source is too narrow for a face-relative crop or the
+                  detected face is too tight to fill the frame cleanly. The full portrait is
+                  preserved and centred horizontally.
+                </Notice>
+              </>
+            ) : (
+              <>
+                <div className="rounded-[9px] border border-line bg-black/20 px-3.5 py-3">
+                  <Toggle
+                    label="Face detection"
+                    hint="BlazeFace runs in this browser. Failed or empty detections fall back to the manual crop."
+                    checked={settings.crop.detectFaces}
+                    onChange={(detectFaces) => patchCrop({ detectFaces })}
+                  />
+                </div>
+                <Slider
+                  label="Face height in frame"
+                  value={settings.crop.faceScale}
+                  min={8}
+                  max={100}
+                  step={1}
+                  unit="%"
+                  hint="A larger value crops tighter around the subject."
+                  onChange={(faceScale) => patchCrop({ faceScale })}
+                />
+                <Slider
+                  label="Horizontal placement"
+                  value={settings.crop.faceX}
+                  min={0}
+                  max={100}
+                  step={1}
+                  unit="%"
+                  hint="Where the face centre lands across the photo frame."
+                  onChange={(faceX) => patchCrop({ faceX })}
+                />
+                <Slider
+                  label="Vertical placement"
+                  value={settings.crop.faceY}
+                  min={0}
+                  max={100}
+                  step={1}
+                  unit="%"
+                  hint="42% leaves natural headroom. 50% centres the face."
+                  onChange={(faceY) => patchCrop({ faceY })}
+                />
+                <Notice tone="info">
+                  Global values apply to every record. The frame preview lets you drag an
+                  individual portrait and save a per-record override.
+                </Notice>
+              </>
+            )}
           </>
         ) : null}
 
@@ -364,8 +406,8 @@ export function ProcessingPanel({
               </div>
             </Field>
             <div className="rounded-[9px] border border-line-soft bg-white/[0.02] px-3.5 py-3 text-[10.5px] leading-relaxed text-muted-2">
-              Grain is generated per photo frame after grading and before the template
-              merge, so typography and artwork stay clean.
+              Grain is generated on the portrait before the tone curve, then the curve and
+              channel mix shape it. Typography and artwork stay clean.
             </div>
           </>
         ) : null}

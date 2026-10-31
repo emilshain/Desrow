@@ -25,8 +25,8 @@ Core promises:
 | --- | --- |
 | Source | CSV drag-and-drop or file picker; public Google Sheets import by link; automatic column-mapping suggestions; up to 5,000 rows; per-row portrait previews; dataset library |
 | Templates | Artwork upload adopts native dimensions; blank or starter-layer presets; draggable/resizable photo frame; unlimited text layers; exact width/height fields; canvas colour |
-| Typography | Bundled fonts; custom font-file upload embedded in the template; device-font family picker with optional Chromium local-font scan; exact pixel size entry; weight, tracking, line height, alignment, opacity, uppercase, colour |
-| Imaging | MediaPipe BlazeFace face detection in-browser; face-relative crop; manual fallback crop; per-record overrides; channel mix; monotone cubic tone curve; contrast and brightness; seeded grain |
+| Typography | Bundled fonts; custom font-file upload embedded in the template; device-font family picker with optional Chromium local-font scan; exact pixel size entry; weight, tracking, line height, max lines, alignment, opacity, uppercase, colour |
+| Imaging | MediaPipe BlazeFace face detection in-browser; face-relative crop; optional fit-to-frame for narrow sources; manual fallback crop; per-record overrides; channel mix; monotone cubic tone curve; contrast and brightness; seeded grain before the curve |
 | Output | 1× / 1.5× / 2× scale; PNG or JPEG; JPEG quality; tokenised filename pattern with duplicate protection |
 | Batch | 1–4 parallel renders; live progress and contact sheet; failures/skips reported per row; cancel; batches persisted |
 | Exports | Full-resolution assets in IndexedDB; individual downloads; ZIP with assets, `manifest.csv` and `desrow-settings.json`; batch history and deletion |
@@ -57,7 +57,7 @@ npm run start
 2. **Templates** — upload master artwork (the canvas adopts its pixel size) or choose a fallback size. Place the photo frame and text layers directly on the canvas or with exact inspector values.
 
 Google Sheets links without a `gid` import the first visible tab; a `gid` in the link targets that tab. The sheet must be shared so anyone with the link can view it.
-3. **Render** — choose the dataset and template, set the crop, tone, grain and output controls, inspect a record, optionally save a per-record crop override, then run the batch.
+3. **Render** — choose the dataset and template, set the crop, tone, grain and output controls, inspect a record, optionally save a per-record crop override, then run the batch. If a source is too narrow for a face-relative crop, set **Photo placement** to **Fit in frame**; the whole portrait is contained in the frame and centred horizontally.
 4. **Export** — download individual frames or the whole ZIP. Batches remain in **Exports** until deleted.
 
 ### Tokens

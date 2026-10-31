@@ -1,3 +1,4 @@
+import { computeFitPlacement } from "./crop";
 import { buildLut } from "./curve";
 import { ensureTemplateFonts } from "./fonts";
 import {
@@ -51,6 +52,8 @@ export interface RenderAssetInput {
   image: HTMLImageElement;
   crop: CropRect;
   scale: number;
+  /** Effective vertical placement, including a per-record crop override. */
+  faceY?: number;
 }
 
 export async function renderAsset(input: RenderAssetInput): Promise<HTMLCanvasElement> {
@@ -81,25 +84,54 @@ export async function renderAsset(input: RenderAssetInput): Promise<HTMLCanvasEl
     const frameCtx = context2d(frameCanvas);
     frameCtx.imageSmoothingEnabled = true;
     frameCtx.imageSmoothingQuality = "high";
-    frameCtx.drawImage(
-      image,
-      crop.sx,
-      crop.sy,
-      crop.sw,
-      crop.sh,
-      0,
-      0,
-      frameCanvas.width,
-      frameCanvas.height,
-    );
 
     const lut = buildLut(
       settings.tone.curve,
       settings.tone.contrast,
       settings.tone.brightness,
     );
-    applyGrading(frameCanvas, lut, settings.tone.channelWeights);
-    applyGrain(frameCanvas, settings.grain);
+
+    if (settings.crop.fitToFrame) {
+      const placement = computeFitPlacement(
+        image.naturalWidth,
+        image.naturalHeight,
+        frameCanvas.width,
+        frameCanvas.height,
+        input.faceY ?? settings.crop.faceY,
+      );
+      const portrait = createCanvas(placement.width, placement.height);
+      const portraitCtx = context2d(portrait);
+      portraitCtx.imageSmoothingEnabled = true;
+      portraitCtx.imageSmoothingQuality = "high";
+      portraitCtx.drawImage(image, 0, 0, portrait.width, portrait.height);
+
+      // Grain is part of the negative: it is laid down before the tone curve.
+      applyGrain(portrait, settings.grain);
+      applyGrading(portrait, lut, settings.tone.channelWeights);
+
+      frameCtx.drawImage(
+        portrait,
+        placement.x,
+        placement.y,
+        placement.width,
+        placement.height,
+      );
+    } else {
+      frameCtx.drawImage(
+        image,
+        crop.sx,
+        crop.sy,
+        crop.sw,
+        crop.sh,
+        0,
+        0,
+        frameCanvas.width,
+        frameCanvas.height,
+      );
+
+      applyGrain(frameCanvas, settings.grain);
+      applyGrading(frameCanvas, lut, settings.tone.channelWeights);
+    }
 
     ctx.save();
     roundedRectPath(ctx, fx, fy, fw, fh, frame.radius * scale);

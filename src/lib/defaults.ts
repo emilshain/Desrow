@@ -50,6 +50,7 @@ export const CURVE_PRESETS: { name: string; points: CurvePoint[] }[] = [
 export const DEFAULT_PROCESSING: ProcessingSettings = {
   crop: {
     detectFaces: true,
+    fitToFrame: false,
     faceScale: 38,
     faceX: 50,
     faceY: 42,
@@ -103,6 +104,7 @@ function textLayer(
     weight: partial.weight ?? 400,
     letterSpacing: partial.letterSpacing ?? 0,
     lineHeight: partial.lineHeight ?? 1.05,
+    maxLines: partial.maxLines ?? 0,
     align: partial.align ?? "left",
     color: partial.color ?? "#f2efe7",
     uppercase: partial.uppercase ?? false,

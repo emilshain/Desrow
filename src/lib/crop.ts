@@ -66,3 +66,42 @@ export function computeCrop(input: CropInput): CropRect {
 export function fullImageCrop(width: number, height: number): CropRect {
   return { sx: 0, sy: 0, sw: width, sh: height };
 }
+
+export interface FitPlacement {
+  /** Destination rectangle inside the photo frame, in frame pixels. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale: number;
+}
+
+/**
+ * Fit mode scales the whole portrait to sit inside the frame without cropping.
+ * Horizontal alignment is always centred; the vertical setting places the
+ * fitted image between the top and bottom of the frame.
+ */
+export function computeFitPlacement(
+  imageWidth: number,
+  imageHeight: number,
+  frameWidth: number,
+  frameHeight: number,
+  vertical = 50,
+): FitPlacement {
+  const sourceWidth = Math.max(1, imageWidth);
+  const sourceHeight = Math.max(1, imageHeight);
+  const scale = Math.min(
+    frameWidth / sourceWidth,
+    frameHeight / sourceHeight,
+  );
+  const width = sourceWidth * scale;
+  const height = sourceHeight * scale;
+
+  return {
+    x: (frameWidth - width) / 2,
+    y: (frameHeight - height) * (clamp(vertical, 0, 100) / 100),
+    width,
+    height,
+    scale,
+  };
+}

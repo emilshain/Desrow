@@ -118,7 +118,7 @@ If the artwork aspect and canvas differ, a warning notes that the image will be 
 - Arrow keys nudge.
 - Inspector sections:
   - **Content:** layer name, text/token content, token chips, resolved preview.
-  - **Typography:** typeface, weight, device font, custom font file, exact size, tracking, line height, opacity, alignment, colour, uppercase.
+  - **Typography:** typeface, weight, device font, custom font file, exact size, tracking, line height, max lines, opacity, alignment, colour, uppercase.
   - **Placement:** X, Y, box width.
   - **Delete text layer** with confirmation modal.
 - Uploaded fonts appear under an “Uploaded” group and are embedded in the template.
@@ -158,7 +158,7 @@ Four tabs:
 
 | Tab | Controls |
 | --- | --- |
-| Crop | Face detection toggle, face height in frame, horizontal placement, vertical placement |
+| Crop | Photo placement mode (face crop / fit in frame), face detection toggle, face height in frame, horizontal placement, vertical placement |
 | Tone | Curve editor (add/drag/remove points), presets, contrast, brightness, red/green/blue channel mix, luminance reset |
 | Grain | Amount, size, seed, shuffle |
 | Output | Scale 1×/1.5×/2×, PNG/JPEG, JPEG quality, filename pattern with token chips, parallel renders |
@@ -171,6 +171,7 @@ Every control writes to the settings object; the whole object persists to localS
 - Status line: detection state, confidence and source URL; error/fallback copy when relevant.
 - Previous/next record buttons and a labelled record selector.
 - Drag the portrait to adjust crop position; scroll to change face height.
+- In fit mode the portrait is contained in the frame and locked to horizontal centre; dragging adjusts vertical placement only and scrolling is disabled.
 - Those interactions create a per-record override. Override sliders show/reset the same values. **Reset** clears the override.
 - Record metadata lists every column.
 

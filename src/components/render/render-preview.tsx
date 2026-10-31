@@ -10,7 +10,11 @@ import {
   cx,
 } from "@/components/ui";
 import { getCell, tokenValues } from "@/lib/csv";
-import { computeCrop, effectiveCropSettings } from "@/lib/crop";
+import {
+  computeCrop,
+  effectiveCropSettings,
+  fullImageCrop,
+} from "@/lib/crop";
 import { proxiedImageUrl } from "@/lib/drive";
 import { detectFaceCached } from "@/lib/face";
 import { loadImageElement } from "@/lib/image";
@@ -75,6 +79,7 @@ export function RenderPreview({
     [dataset],
   );
 
+  const fit = settings.crop.fitToFrame;
   const effective = effectiveCropSettings(settings.crop, override);
   const hasOverride = Boolean(override && Object.keys(override).length);
   const name = getCell(row.values, dataset.mapping.nameColumn).trim() || `Record ${index + 1}`;
@@ -101,7 +106,9 @@ export function RenderPreview({
           let status: DetectionStatus = settings.crop.detectFaces ? "pending" : "disabled";
           let score: number | null = null;
 
-          if (settings.crop.detectFaces) {
+          if (fit) {
+            status = "disabled";
+          } else if (settings.crop.detectFaces) {
             try {
               box = await detectFaceCached(sourceUrl, image);
               status = box ? "detected" : "not-detected";
@@ -115,15 +122,17 @@ export function RenderPreview({
           setDetection(status);
           setConfidence(score);
 
-          const crop = computeCrop({
-            imageWidth: image.naturalWidth,
-            imageHeight: image.naturalHeight,
-            frameWidth: template.photo.width * template.width,
-            frameHeight: template.photo.height * template.height,
-            box,
-            settings: settings.crop,
-            override,
-          });
+          const crop = fit
+            ? fullImageCrop(image.naturalWidth, image.naturalHeight)
+            : computeCrop({
+                imageWidth: image.naturalWidth,
+                imageHeight: image.naturalHeight,
+                frameWidth: template.photo.width * template.width,
+                frameHeight: template.photo.height * template.height,
+                box,
+                settings: settings.crop,
+                override,
+              });
 
           const rendered = await renderAsset({
             template,
@@ -131,6 +140,7 @@ export function RenderPreview({
             values: tokenValues(row.values, dataset.mapping),
             image,
             crop,
+            faceY: effective.faceY,
             scale: Math.min(1, 1000 / template.width, 760 / template.height),
           });
           if (cancelled) return;
@@ -166,6 +176,8 @@ export function RenderPreview({
     const element = overlayRef.current;
     if (!element) return;
 
+    if (fit) return;
+
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       const base = effectiveCropSettings(settings.crop, override);
@@ -175,7 +187,7 @@ export function RenderPreview({
 
     element.addEventListener("wheel", onWheel, { passive: false });
     return () => element.removeEventListener("wheel", onWheel);
-  }, [settings.crop, override, onOverrideChange]);
+  }, [settings.crop, override, onOverrideChange, fit]);
 
   const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
@@ -198,7 +210,8 @@ export function RenderPreview({
       const dx = ((moveEvent.clientX - startX) / frameWidth) * 100;
       const dy = ((moveEvent.clientY - startY) / frameHeight) * 100;
       onOverrideChange({
-        faceX: Math.round(clamp(base.faceX + dx, 0, 100)),
+        // Fit mode locks horizontal centring; only vertical placement moves.
+        ...(fit ? {} : { faceX: Math.round(clamp(base.faceX + dx, 0, 100)) }),
         faceY: Math.round(clamp(base.faceY + dy, 0, 100)),
       });
     };
@@ -212,7 +225,9 @@ export function RenderPreview({
     window.addEventListener("pointerup", stop);
   };
 
-  const detectionInfo = detectionCopy[detection];
+  const detectionInfo = fit
+    ? { label: "Fit in frame · centred", tone: "accent" as const }
+    : detectionCopy[detection];
 
   return (
     <section className="panel overflow-hidden">
@@ -287,7 +302,11 @@ export function RenderPreview({
                     width: `${template.photo.width * 100}%`,
                     height: `${template.photo.height * 100}%`,
                   }}
-                  title="Drag to reposition · scroll to zoom"
+                  title={
+                    fit
+                      ? "Drag vertically to place the fitted portrait"
+                      : "Drag to reposition · scroll to zoom"
+                  }
                 >
                   <span
                     className={cx(
@@ -295,7 +314,7 @@ export function RenderPreview({
                       dragging ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                     )}
                   >
-                    Drag portrait · scroll to zoom
+                    {fit ? "Fit · drag vertically" : "Drag portrait · scroll to zoom"}
                   </span>
                 </div>
               ) : null}
@@ -324,7 +343,7 @@ export function RenderPreview({
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <Badge tone={detectionInfo.tone}>
               {detectionInfo.label}
-              {detection === "detected" && confidence !== null
+              {!fit && detection === "detected" && confidence !== null
                 ? ` · ${Math.round(confidence * 100)}%`
                 : ""}
             </Badge>
@@ -378,26 +397,30 @@ export function RenderPreview({
               </button>
             </div>
             <div className="mt-3 space-y-4">
+              {fit ? null : (
+                <>
+                  <Slider
+                    label="Face height"
+                    value={Math.round(effective.faceScale)}
+                    min={8}
+                    max={100}
+                    step={1}
+                    unit="%"
+                    onChange={(faceScale) => onOverrideChange({ faceScale })}
+                  />
+                  <Slider
+                    label="Face X"
+                    value={Math.round(effective.faceX)}
+                    min={0}
+                    max={100}
+                    step={1}
+                    unit="%"
+                    onChange={(faceX) => onOverrideChange({ faceX })}
+                  />
+                </>
+              )}
               <Slider
-                label="Face height"
-                value={Math.round(effective.faceScale)}
-                min={8}
-                max={100}
-                step={1}
-                unit="%"
-                onChange={(faceScale) => onOverrideChange({ faceScale })}
-              />
-              <Slider
-                label="Face X"
-                value={Math.round(effective.faceX)}
-                min={0}
-                max={100}
-                step={1}
-                unit="%"
-                onChange={(faceX) => onOverrideChange({ faceX })}
-              />
-              <Slider
-                label="Face Y"
+                label={fit ? "Vertical placement" : "Face Y"}
                 value={Math.round(effective.faceY)}
                 min={0}
                 max={100}
@@ -407,8 +430,9 @@ export function RenderPreview({
               />
             </div>
             <p className="mt-3 text-[10px] leading-relaxed text-muted-2">
-              Overrides apply to this record only and are used by the batch. Drag or scroll
-              directly on the frame to set position and zoom.
+              {fit
+                ? "Fit mode scales the whole portrait inside the frame, always centred horizontally. Overrides apply to this record only and are used by the batch."
+                : "Overrides apply to this record only and are used by the batch. Drag or scroll directly on the frame to set position and zoom."}
             </p>
           </div>
         </aside>

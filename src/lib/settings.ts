@@ -51,6 +51,7 @@ export function loadSettings(): ProcessingSettings {
     return {
       crop: {
         detectFaces: bool(crop.detectFaces, base.crop.detectFaces),
+        fitToFrame: bool(crop.fitToFrame, base.crop.fitToFrame),
         faceScale: num(crop.faceScale, base.crop.faceScale, 8, 100),
         faceX: num(crop.faceX, base.crop.faceX, 0, 100),
         faceY: num(crop.faceY, base.crop.faceY, 0, 100),

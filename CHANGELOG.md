@@ -4,6 +4,16 @@ All notable changes to Desrow are recorded here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Added
+
+- Photo placement mode **Fit in frame**: the whole portrait is scaled inside the photo frame without cropping, always centred horizontally. Intended for narrow sources or faces detected too tightly for a face-relative crop.
+- Per-record vertical placement still applies in fit mode; face detection is skipped because it has no effect.
+- **Max lines** per text layer (0 = unlimited). Lines beyond the limit are hidden in the template preview and rendered assets.
+
+### Changed
+
+- Grain is now composited on the portrait before the monochrome conversion and tone curve, so the curve shapes the grain. The UI copy and pipeline documentation reflect the new order.
+
 ### Planned
 
 - Automated unit, integration and browser tests

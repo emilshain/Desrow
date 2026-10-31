@@ -56,6 +56,8 @@ export interface TextLayer {
   weight: number;
   letterSpacing: number;
   lineHeight: number;
+  /** Maximum rendered lines; 0 means no limit. */
+  maxLines: number;
   align: TextAlign;
   color: string;
   uppercase: boolean;
@@ -102,6 +104,11 @@ export interface GrainSettings {
 
 export interface CropSettings {
   detectFaces: boolean;
+  /**
+   * Scale the whole portrait down to sit inside the photo frame instead of
+   * face-cropping it. Used for narrow sources whose face box is too tight.
+   */
+  fitToFrame: boolean;
   /** Desired face height as a percentage of the photo frame height. */
   faceScale: number;
   /** Horizontal face position inside the frame, 0–100. */

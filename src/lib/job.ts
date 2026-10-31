@@ -1,5 +1,5 @@
 import { getCell, tokenValues } from "./csv";
-import { computeCrop } from "./crop";
+import { computeCrop, effectiveCropSettings, fullImageCrop } from "./crop";
 import { proxiedImageUrl } from "./drive";
 import { detectFaceCached } from "./face";
 import { canvasToBlob, loadImageElement, thumbnailDataUrl } from "./image";
@@ -70,7 +70,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
   let succeeded = 0;
   let failed = 0;
   let skipped = 0;
-  let detectionDisabled = !settings.crop.detectFaces;
+  let detectionDisabled = !settings.crop.detectFaces || settings.crop.fitToFrame;
   let detectionErrorReported = false;
 
   const report = () => {
@@ -165,15 +165,18 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
         }
       }
 
-      const crop = computeCrop({
-        imageWidth: image.naturalWidth,
-        imageHeight: image.naturalHeight,
-        frameWidth: template.photo.width * template.width,
-        frameHeight: template.photo.height * template.height,
-        box: faceBox,
-        settings: settings.crop,
-        override: overrides[row.id],
-      });
+      const cropSettings = effectiveCropSettings(settings.crop, overrides[row.id]);
+      const crop = cropSettings.fitToFrame
+        ? fullImageCrop(image.naturalWidth, image.naturalHeight)
+        : computeCrop({
+            imageWidth: image.naturalWidth,
+            imageHeight: image.naturalHeight,
+            frameWidth: template.photo.width * template.width,
+            frameHeight: template.photo.height * template.height,
+            box: faceBox,
+            settings: settings.crop,
+            override: overrides[row.id],
+          });
 
       const canvas = await renderAsset({
         template,
@@ -181,6 +184,7 @@ export async function runRenderJob(options: RunRenderJobOptions): Promise<Render
         values: tokens,
         image,
         crop,
+        faceY: cropSettings.faceY,
         scale: settings.output.scale,
       });
 

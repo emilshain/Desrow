@@ -54,6 +54,7 @@ Last updated: 30 October 2026 · Release 0.1.0
 - [x] Device font entry by family name
 - [x] Optional Chromium `queryLocalFonts` scan with permission/fallback copy
 - [x] Exact pixel size, weight, tracking, line height, opacity, alignment, colour, uppercase
+- [x] Per-layer maximum line count with hidden overflow
 - [x] Token insertion and resolved content preview
 - [x] Wrapping, hard breaks and long-word breaking
 
@@ -62,13 +63,14 @@ Last updated: 30 October 2026 · Release 0.1.0
 - [x] In-browser BlazeFace detection with GPU → CPU fallback
 - [x] Serialised detector queue and 300-entry URL cache
 - [x] Face-relative crop with face height and X/Y placement
+- [x] Fit-in-frame placement for narrow sources, always centred horizontally
 - [x] Manual fallback crop when detection is off/unavailable/empty
 - [x] Per-record crop overrides from sliders and preview drag/scroll
 - [x] Channel mix for monochrome conversion
 - [x] Five-point monotone tone curve with add/drag/remove and presets
 - [x] Contrast and brightness after the curve
 - [x] Seeded grain with amount, size and shuffle
-- [x] Grain applied to the photo frame only, before template merge
+- [x] Grain processed before the tone curve, confined to the portrait
 
 ### Render and export
 

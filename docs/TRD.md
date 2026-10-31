@@ -124,12 +124,13 @@ The compositor executes in this order for every record:
 validate link
   → fetch through /api/image
   → decode image
-  → detect face (cached; optional)
-  → compute crop window from face + frame aspect + manual controls
-  → draw cropped portrait into an offscreen frame canvas
+  → detect face (cached; optional, skipped in fit mode)
+  → compute crop window from face + frame aspect + manual controls,
+    or fit the whole portrait inside the frame
+  → draw the portrait into an offscreen canvas
+  → apply seeded grain
   → convert to monochrome with channel weights
   → apply tone LUT (curve, contrast, brightness)
-  → apply seeded grain
   → draw artwork background at output size
   → clip the portrait into the photo frame (rounded corners)
   → draw frame border
@@ -206,6 +207,8 @@ sy = box.centerY * imageHeight - (faceY / 100) * cropHeight
 
 The source rect is clamped to the image. `faceScale` is 8–100 (percentage of frame height occupied by the face), `faceX`/`faceY` are 0–100. Larger `faceScale` means a tighter crop. The fallback box is centred at 50% / 43% with 26% × 32% normalized size.
 
+When `fitToFrame` is enabled, the crop maths is bypassed. `computeFitPlacement` scales the whole portrait with `min(frameWidth / imageWidth, frameHeight / imageHeight)`, places it at `(frameWidth − width) / 2` horizontally and distributes the remaining vertical space by `faceY`. The image is never cropped, horizontal alignment is always centred, and face detection is skipped for the batch.
+
 Per-record overrides supply only the changed values; `effectiveCropSettings` clamps them and merges with global settings.
 
 ### 6.6 Tone
@@ -220,7 +223,8 @@ Per-record overrides supply only the changed values; `effectiveCropSettings` cla
 
 - A 256 × 256 noise tile is generated with a seeded `mulberry32` PRNG.
 - The tile is scaled to `clamp(grain.size, 0.25, 6) × 256` using nearest-neighbour (image smoothing disabled).
-- A repeating canvas pattern is composited in `overlay` mode at alpha `amount/100 × 0.92` over the graded frame.
+- A repeating canvas pattern is composited in `overlay` mode at alpha `amount/100 × 0.92` over the ungraded portrait.
+- Grain runs before monochrome conversion and the tone LUT, so the curve shapes the grain along with the image.
 - Amount is exposed as 0–70%, size as 0.4–4 px, seed as 1–999999.
 - The same seed reproduces the same pattern for a given frame size.
 
@@ -233,7 +237,8 @@ Per-record overrides supply only the changed values; `effectiveCropSettings` cla
 3. Sets `letterSpacing` when the browser supports it.
 4. Wraps each hard-break paragraph to the layer's box width (`layer.width × templateWidth × scale`).
 5. Breaks a single overlong word by character.
-6. Returns lines, font string, box width, line height and total height.
+6. Truncates the line list to `maxLines` when it is greater than zero (`0` = unlimited); hidden lines are not drawn.
+7. Returns lines, font string, box width, line height and total height.
 
 `drawTextLayers` anchors lines according to left/center/right alignment, uses top baseline, applies opacity, and draws each line at `lineHeight × index`. Text boxes are measured for the editor overlay and for drag bounds.
 
